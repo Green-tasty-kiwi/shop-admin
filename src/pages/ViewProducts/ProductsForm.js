@@ -8,7 +8,7 @@ export const ProductsForm = ({ product }) => {
 
             <Grid item xs={4}>
                 <div>
-                    <img className={classes.img} src={product.img} alt='orange' />
+                    <img className={classes.img} src={product.image} alt='orange' />
                 </div>
             </Grid>
 
@@ -26,13 +26,13 @@ export const ProductsForm = ({ product }) => {
                     </span>
                     </Typography>
 
-                    <Typography variant='OVERLINE TEXT'>
+                    <Typography variant='overline'>
                         <span>{product.status}</span>
                     &nbsp;({product.quantity} kg)
                     </Typography>
 
                     <Typography variant='subtitle1'>
-                        {product.desription}
+                        {product.description}
                     </Typography>
 
                 </Grid>
@@ -43,19 +43,19 @@ export const ProductsForm = ({ product }) => {
 
                     <Grid item xs={12} >
                         <Typography variant='body1'>
-                            Meta header: {product.meta_header}
+                            Meta headers: {product.metaHeaders}
                         </Typography>
                     </Grid>
 
                     <Grid item xs={12}>
                         <Typography variant='body1'>
-                            Meta description: {product.meta_description}
+                            Meta description: {product.metaDescription}
                         </Typography>
                     </Grid>
 
                     <Grid item xs={12}>
                         <Typography variant='body1'>
-                            Meta keys: {product.meta_key}
+                            Meta keys: {product.metaKeys}
                         </Typography>
                     </Grid>
 

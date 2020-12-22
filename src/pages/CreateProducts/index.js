@@ -1,12 +1,42 @@
-import React from 'react';
+import { React, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { TextField, MenuItem, FormControl, Select, FormHelperText, Grid, Button, IconButton } from '@material-ui/core';
-import PhotoCamera from '@material-ui/icons/PhotoCamera';
+import { TextField, MenuItem, FormControl, Select, FormHelperText, Grid, Button } from '@material-ui/core';
+import { useHistory } from 'react-router-dom';
 import { BreadCrumbs } from "../../components/common/Breadcrumbs"
-
+import { gateways } from '../../gateways'
 
 export default function CreateProductsPage({ category }) {
   const classes = useStyles();
+  const history = useHistory();
+  const [file, setFile] = useState({})
+  const [product, setProduct] = useState({});
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    try {
+      const formData = new FormData();
+
+      formData.set('name', product.name);
+      formData.set('price', product.price);
+      formData.set('description', product.description);
+      formData.set('quantity', product.quantity);
+      formData.set('status', product.status);
+      formData.set('metaHeaders', product.metaHeaders);
+      formData.set('metaDescription', product.metaDescription);
+      formData.set('metaKeys', product.metaKeys);
+
+      formData.set('image', file);
+      await gateways.productsGateway.create(formData)
+      history.push('/products');
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const handleChange = (event) => setProduct({ ...product, [event.target.name]: event.target.value });
+
+  const handleFileChange = (event) => setFile(event.target.files[0]);
+
   return (
     <div>
 
@@ -20,35 +50,86 @@ export default function CreateProductsPage({ category }) {
         }]}
       />
 
-      <form noValidate autoComplete="off">
+      <form onSubmit={handleSubmit}
+        noValidate
+        autoComplete="off">
         <Grid container spacing={2} >
 
           <Grid item xs={12} md={4} lg={3}>
-            <TextField fullWidth required label="Product name:" />
+            <TextField
+              fullWidth
+              required
+              name="name"
+              label="Product name:"
+              onChange={handleChange}
+            />
           </Grid>
 
           <Grid item xs={12} md={4} lg={3}>
-            <TextField fullWidth required label="Price ($):" />
+            <TextField
+              fullWidth
+              required
+              name="price"
+              label="Price ($):"
+              onChange={handleChange}
+            />
           </Grid>
 
           <Grid item xs={12} md={4} lg={3} >
-            <TextField fullWidth required label="Description:" />
+            <TextField
+              fullWidth
+              required
+              name="description"
+              label="Description:"
+              onChange={handleChange}
+            />
           </Grid>
 
           <Grid item xs={12} md={4} lg={3}>
-            <TextField fullWidth required label="Quantity:" />
+            <TextField
+              fullWidth
+              required
+              name="quantity"
+              label="Quantity:"
+              onChange={handleChange}
+            />
           </Grid>
 
           <Grid item xs={12} md={4} lg={3}>
-            <TextField fullWidth required label="Meta Tag Title:" />
+            <TextField
+              fullWidth
+              required
+              name="status"
+              label="Status:"
+              onChange={handleChange}
+            />
           </Grid>
 
           <Grid item xs={12} md={4} lg={3}>
-            <TextField fullWidth required label="Meta Tag Description:" />
+            <TextField
+              fullWidth
+              name="metaHeaders"
+              label="Meta Tag Title:"
+              onChange={handleChange}
+            />
           </Grid>
 
           <Grid item xs={12} md={4} lg={3}>
-            <TextField fullWidth required label="Meta Tag Keywords:" />
+            <TextField
+              fullWidth
+              name="metaDescription"
+              label="Meta Tag Description:"
+              onChange={handleChange}
+            />
+          </Grid>
+
+          <Grid item xs={12} md={4} lg={3}>
+            <TextField
+              fullWidth
+              name="metaKeys"
+              label="Meta Tag Keywords:"
+              onChange={handleChange}
+            />
           </Grid>
 
           <Grid item xs={12} md={4} lg={3}>
@@ -73,7 +154,7 @@ export default function CreateProductsPage({ category }) {
           </Grid>
 
           <Grid item xs={12} md={4} lg={3}>
-            <div fullWidth className={classes.root}>
+            <div className={classes.root}>
 
               <input
                 accept="image/*"
@@ -81,31 +162,23 @@ export default function CreateProductsPage({ category }) {
                 id="contained-button-file"
                 multiple
                 type="file"
+                onChange={handleFileChange}
               />
               <label htmlFor="contained-button-file">
                 <Button variant="contained" component="span">
-                  Upload
+                  Upload image
                 </Button>
+                {file && file.name}
               </label>
 
-              <input
-                accept="image/*"
-                className={classes.input}
-                id="icon-button-file"
-                type="file"
-              />
-              <label htmlFor="icon-button-file">
-                <IconButton aria-label="upload picture" component="span">
-                  <PhotoCamera />
-                </IconButton>
-              </label>
             </div>
           </Grid>
 
           <Grid item xs={12} md={4} lg={3}>
             <Button
+              type="submit"
               variant="outlined"
-              onClick={() => { alert('clicked') }}>
+            >
               Send
               </Button>
           </Grid>

@@ -23,7 +23,10 @@ export default function StickyHeadTable({
     rows = [],
     headers = [],
     columns = [],
-    menuItems = []
+    menuItems = [],
+    total = 0,
+    updateTable,
+    noPagination,
 }) {
     const classes = useStyles();
     const [page, setPage] = React.useState(0);
@@ -31,11 +34,13 @@ export default function StickyHeadTable({
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
+        updateTable({ page: newPage, rowsPerPage })
     };
 
     const handleChangeRowsPerPage = (event) => {
         setRowsPerPage(+event.target.value);
         setPage(0);
+        updateTable({ page, rowsPerPage })
     };
 
     return (
@@ -59,10 +64,10 @@ export default function StickyHeadTable({
                     <TableBody>
                         {rows.map((row) => {
                             return (
-                                <TableRow hover role="checkbox" tabIndex={-1} key={row.code}>
+                                <TableRow key={row.id} hover role="checkbox" tabIndex={-1} >
                                     {columns.map((column, index) => {
                                         return (
-                                            <TableCell key={row.id} >
+                                            <TableCell key={row.id + column.key} >
                                                 {column.format ? column.format(row[column.key]) : row[column.key]}
                                             </TableCell>
                                         );
@@ -74,15 +79,19 @@ export default function StickyHeadTable({
                     </TableBody>
                 </Table>
             </TableContainer>
-            <TablePagination
-                rowsPerPageOptions={[10, 25, 100]}
-                component="div"
-                count={rows.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onChangePage={handleChangePage}
-                onChangeRowsPerPage={handleChangeRowsPerPage}
-            />
+            { !noPagination &&
+                <TablePagination
+                    rowsPerPageOptions={[10, 25, 100]}
+                    component="div"
+                    count={total}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onChangePage={handleChangePage}
+                    onChangeRowsPerPage={handleChangeRowsPerPage}
+                />
+            }
+
+
         </Paper>
     );
 }

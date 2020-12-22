@@ -12,7 +12,7 @@ const useStyles = makeStyles((theme) => ({
 export default ({
     variant = 'outlined',
     color = 'primary',
-    size = 'large',
+    size = 'medium',
     ...props
 }) => {
     const classes = useStyles();

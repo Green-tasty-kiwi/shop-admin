@@ -1,30 +1,78 @@
-import React from 'react';
+import { React, useEffect, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Stepper, Step, StepLabel, Button, Typography, Grid, Table, TableBody, TableCell, TableContainer, TableRow, Paper } from '@material-ui/core';
+import { Stepper, Step, StepLabel, Button, Typography, Grid, TextField } from '@material-ui/core';
 import OrderCustomerForm from './OrderCustomerForm';
 import StickyHeadTable from '../../components/common/Table';
 import OrderProducts from './OrderProducts';
-import { BreadCrumbs } from "../../components/common/Breadcrumbs"
-
-
+import { CustomerInfo } from './CustomerInfo';
+import { BreadCrumbs } from "../../components/common/Breadcrumbs";
+import { gateways } from '../../gateways';
+import { useHistory } from 'react-router-dom';
 
 function getSteps() {
     return ['Customer information', 'Products order', 'Total'];
 }
 
-function handleFinish() {
 
-}
 
-const defaultProducts = [{ id: 1, name: 'product', img: '' }];
-
-export default function CreateOrders({ products = defaultProducts }) {
-    const [orderData, setOrderData] = React.useState({});
-    const [orderProducts, setOrderProducts] = React.useState([]);
+export default function CreateOrders() {
+    const history = useHistory();
+    const noPagination = true;
+    const [totalSum, setTotalSum] = useState()
+    const [page, setPage] = useState(0);
+    const [perPage, setPerPage] = useState(10);
+    const [products, setProducts] = useState([]);
+    const [total, setTotal] = useState();
+    const [phone, setPhone] = useState();
+    const [orderCustomer, setOrderCustomer] = useState({
+        firstName: 'Jhon',
+        lastName: 'Smith',
+        city: 'Kiev',
+        address: 'Krasnova',
+        house: '56',
+        appartment: '35'
+    });
+    const [orderProducts, setOrderProducts] = useState([]);
     const classes = useStyles();
-    const [activeStep, setActiveStep] = React.useState(0);
-    const [skipped, setSkipped] = React.useState(new Set());
+    const [activeStep, setActiveStep] = useState(0);
+    const [skipped, setSkipped] = useState(new Set());
     const steps = getSteps();
+    
+
+    const updateTable = ({ page, rowsPerPage }) => {
+        setPage(page);
+        setPerPage(rowsPerPage)
+    }
+
+    useEffect(() => {
+        gateways.productsGateway.findAll({ page, perPage }).then((products) => {
+            const { count, rows } = products;
+            setProducts(rows);
+            setTotal(count)
+        });
+    }, [page, perPage])
+
+    useEffect(() => {
+        const existCustomer = gateways.customersGateway.findOne({ phone })
+            .then((existCustomer) => {
+                existCustomer && setOrderCustomer(existCustomer)
+            })
+    }, [phone])
+    
+    useEffect(() => {
+        setTotalSum(
+            orderProducts.reduce(function(sum, current) {
+            
+                sum += current.price;
+                return sum
+            }, 0)
+            )
+    }, [orderProducts])
+
+    const handleChange = (event) => {
+        setPhone({ [event.target.phone]: event.target.value });
+        setOrderCustomer({ ...orderCustomer, [event.target.name]: event.target.value })
+    };
 
     const isStepOptional = (step) => {
         return step === 1;
@@ -69,7 +117,35 @@ export default function CreateOrders({ products = defaultProducts }) {
     };
 
     const handleRemoveProducts = (id) => {
-        setOrderProducts(products.filter(product => product.id !== id))
+        setOrderProducts(orderProducts.filter(orderProduct => orderProduct.id !== id))
+    }
+
+    const handleFinish = async (event) => {
+        event.preventDefault()
+        try {
+            const formData = new FormData();
+
+            formData.set('phone', orderCustomer.phone);
+            formData.set('firstName', orderCustomer.firstName);
+            formData.set('lastName', orderCustomer.lastName);
+            formData.set('city', orderCustomer.city);
+            formData.set('address', orderCustomer.address);
+            formData.set('house', orderCustomer.house);
+            formData.set('appartment', orderCustomer.appartment);
+
+            const productsId = [];
+
+            for (let orderProduct of orderProducts) {
+                productsId.push(orderProduct.id)
+            }
+
+            formData.set('productsId', productsId);
+
+            await gateways.ordersGateway.create(formData)
+            history.push('/orders');
+        } catch (error) {
+            console.error(error)
+        }
     }
 
     function getStepContent(step) {
@@ -77,19 +153,15 @@ export default function CreateOrders({ products = defaultProducts }) {
             case 0:
                 return (
                     <OrderCustomerForm
-                        phone={orderData.phone}
-                        first_name={orderData.first_name}
-                        last_name={orderData.last_name}
-                        city={orderData.city}
-                        address={orderData.address}
-                        house={orderData.house}
-                        appartment={orderData.appartment}
-                        handleChange={(event) => {
-                            setOrderData({
-                                ...orderData,
-                                [event.target.name]: event.target.value
-                            })
-                        }}
+                        phone={orderCustomer.phone}
+                        firstName={orderCustomer.firstName}
+                        lastName={orderCustomer.lastName}
+                        city={orderCustomer.city}
+                        address={orderCustomer.address}
+                        house={orderCustomer.house}
+                        appartment={orderCustomer.appartment}
+                        handleChange={handleChange}
+
                     />
                 );
             case 1:
@@ -97,30 +169,59 @@ export default function CreateOrders({ products = defaultProducts }) {
                     <Grid container direction="column" spacing={2}>
 
                         <Grid item>
+                            <h2 className={classes.h2}>Ordered Products</h2>
+
                             <StickyHeadTable
+
+                                noPagination={noPagination}
+
+                                updateTable={updateTable}
                                 rows={orderProducts}
-                                headers={[{ label: 'Image' }, { label: 'Name' },]}
+
+                                headers={[
+                                    { label: 'Image' },
+                                    { label: 'Name' },
+                                    { label: 'Status' },
+                                    { label: 'Price' },
+                                    { label: 'Quantity' },
+                                ]}
+
                                 columns={[
-                                    { key: 'name' },
                                     {
-                                        key: 'img',
+                                        key: 'image',
                                         format: (value) => {
                                             return <img height={32} src={value} alt='ups!' />
                                         }
-                                    }
+                                    },
+                                    { key: 'name' },
+                                    { key: 'status' },
+                                    { key: 'price' },
+                                    { key: 'quantity' },
                                 ]}
+
+                                menuItems={[{ label: 'Delete', onClick: handleRemoveProducts },]}
                             />
                         </Grid>
 
                         <Grid item>
+                            <h2 className={classes.h2}>Products List</h2>
+
                             <OrderProducts
+
+                                updateTable={updateTable}
+
+                                total={total}
+
                                 orderProducts={orderProducts}
                                 products={products}
                                 handleAddProduct={(id) => {
-                                    setOrderProducts([
-                                        ...orderProducts,
-                                        products.find(product => product.id === id)
-                                    ])
+
+                                    if (!orderProducts.find(orderProduct => orderProduct.id === id)) {
+                                        setOrderProducts([
+                                            ...orderProducts,
+                                            products.find(product => product.id === id)
+                                        ]);
+                                    }
                                 }}
                                 handleRemoveProduct={handleRemoveProducts}
                             />
@@ -130,85 +231,56 @@ export default function CreateOrders({ products = defaultProducts }) {
                 );
             case 2:
                 return (
+
                     <Grid container direction="column" spacing={2}>
 
-                        <Grid item>
-                            <h2>Customer information</h2>
-
-                            <TableContainer component={Paper}>
-                                <Table aria-label="customized table">
-                                    <TableBody>
-
-                                        <TableRow >
-                                            <TableCell style={{ width: '20%' }}>
-                                                Phone number:
-                                            </TableCell>
-                                            <TableCell align="left">{orderData.phone}</TableCell>
-                                        </TableRow>
-
-                                        <TableRow >
-                                            <TableCell>
-                                                First Name:
-                                            </TableCell>
-                                            <TableCell align="left">{orderData.first_name}</TableCell>
-                                        </TableRow>
-
-                                        <TableRow>
-                                            <TableCell>
-                                                Last Name:
-                                            </TableCell>
-                                            <TableCell align="left">{orderData.last_name}</TableCell>
-                                        </TableRow>
-
-                                        <TableRow >
-                                            <TableCell>
-                                                City:
-                                            </TableCell>
-                                            <TableCell align="left">{orderData.city}</TableCell>
-                                        </TableRow>
-
-                                        <TableRow >
-                                            <TableCell>
-                                                Address:
-                                            </TableCell>
-                                            <TableCell align="left">{orderData.address}</TableCell>
-                                        </TableRow>
-
-                                        <TableRow >
-                                            <TableCell>
-                                                House:
-                                            </TableCell>
-                                            <TableCell align="left">{orderData.house}</TableCell>
-                                        </TableRow>
-
-                                        <TableRow>
-                                            <TableCell>
-                                                Appartment:
-                                            </TableCell>
-                                            <TableCell align="left">{orderData.appartment}</TableCell>
-                                        </TableRow>
-
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        </Grid>
+                        <CustomerInfo orderCustomer={orderCustomer} />
 
                         <Grid item>
                             <h2>Customer order</h2>
 
                             <StickyHeadTable
+
+                                noPagination={noPagination}
+
                                 rows={orderProducts}
-                                headers={[{ label: 'Image' }, { label: 'Name' },]}
+
+                                headers={[
+                                    { label: 'Image' },
+                                    { label: 'Name' },
+                                    { label: 'Status' },
+                                    { label: 'Price' },
+                                    { label: 'Quantity' },
+                                ]}
+
                                 columns={[
-                                    { key: 'name' },
                                     {
-                                        key: 'img',
+                                        key: 'image',
                                         format: (value) => {
                                             return <img height={32} src={value} alt='ups!' />
                                         }
-                                    }
+                                    },
+                                    { key: 'name' },
+                                    { key: 'status' },
+                                    { key: 'price' },
+                                    { key: 'quantity' },
                                 ]}
                             />
+                        </Grid>
+
+                        <Grid container className={classes.total}>
+                            <Grid item xs={9}/>
+                        <Grid item xs={3}>
+                        <TextField 
+                        name="totalSum"
+                        label="Total sum"
+                        defaultValue={totalSum}
+                        variant="outlined" 
+                        InputProps={{
+                            readOnly: true,
+                        }}
+                        />
+                        </Grid>
                         </Grid>
 
                     </Grid >
@@ -262,7 +334,7 @@ export default function CreateOrders({ products = defaultProducts }) {
                         </div>
                     ) : (
                             <div>
-                                <Typography className={classes.instructions}>{getStepContent(activeStep)}</Typography>
+                                {getStepContent(activeStep)}
 
                                 <div>
                                     <Button disabled={activeStep === 0} onClick={handleBack} className={classes.button}>
@@ -282,6 +354,7 @@ export default function CreateOrders({ products = defaultProducts }) {
                                     <Button
                                         variant="contained"
                                         color="primary"
+
                                         onClick={activeStep === steps.length - 1 ? handleFinish : handleNext}
                                         className={classes.button}
                                     >
@@ -302,9 +375,16 @@ const useStyles = makeStyles((theme) => ({
     },
     button: {
         marginRight: theme.spacing(1),
+        marginTop: '15px'
     },
     instructions: {
         marginTop: theme.spacing(1),
         marginBottom: theme.spacing(1),
+    },
+    h2: {
+        textAlign: 'center'
+    },
+    total: {
+        marginTop: '15px'
     }
 }));

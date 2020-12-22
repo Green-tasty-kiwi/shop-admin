@@ -13,11 +13,11 @@ export const BreadCrumbs = ({
     const classes = useStyles();
     return (
         <Breadcrumbs className={classes.breadcrumbs} aria-label="breadcrumb">
-            {items.map(item => {
+            {items.map((item, index) => {
                 return (
                     item.link ?
-                        <Link className={classes.link} to={item.link}>{item.label}</Link> :
-                        <span color="grey">{item.label}</span>
+                        <Link key={index} className={classes.link} to={item.link}>{item.label}</Link> :
+                        <span key={index} color="grey">{item.label}</span>
                 )
             })}
         </Breadcrumbs>

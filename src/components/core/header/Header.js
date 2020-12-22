@@ -133,14 +133,14 @@ export function Header({ isOpen, handleDrawerOpen }) {
             </div>
           </Grid>
           <Grid item xs={7}>
-            <Grid container justify="end" direction="row">
-              <Grid item xs="9" />
-              <Grid item xs="1">
+            <Grid container justify="flex-end" direction="row">
+              <Grid item xs={9} />
+              <Grid item xs={1}>
                 <Tooltip title="Home" arrow>
                   <Link to="/"><IconButton><HomeIcon color="action" /></IconButton></Link>
                 </Tooltip>
               </Grid>
-              <Grid item xs="2">
+              <Grid item xs={2}>
                 <Tooltip title="Log out" arrow>
                   <IconButton
                     variant="contained"

@@ -5,8 +5,8 @@ export default function OrderCustomerForm({
     handleChange,
     city,
     phone,
-    first_name,
-    last_name,
+    firstName,
+    lastName,
     address,
     house,
     appartment
@@ -18,20 +18,22 @@ export default function OrderCustomerForm({
                 <Grid item xs={12} md={4} lg={3}>
                     <TextField
                         name="phone"
+                        type="tel"
+                        name="phone"
                         value={phone}
                         fullWidth
                         required
                         label="Phone number:"
-                        onChange={handleChange}
-                    />
+                        onChange={handleChange}>
+                    </TextField>
                 </Grid>
 
                 <Grid item xs={12} md={4} lg={3}>
                     <TextField
                         fullWidth
                         required
-                        value={first_name}
-                        name="first_name"
+                        value={firstName}
+                        name="firstName"
                         label="First name:"
                         onChange={handleChange}
                     />
@@ -41,8 +43,8 @@ export default function OrderCustomerForm({
                     <TextField
                         fullWidth
                         required
-                        value={last_name}
-                        name="last_name"
+                        value={lastName}
+                        name="lastName"
                         label="Last name:"
                         onChange={handleChange} />
                 </Grid>
@@ -50,15 +52,9 @@ export default function OrderCustomerForm({
                 <Grid item xs={12} md={4} lg={3}>
                     <FormControl fullWidth>
                         <Select
-                            labelId="demo-simple-select-helper-label"
-                            id="demo-simple-select-helper"
                             value={city}
                             onChange={handleChange}
                             name="city">
-
-                            <MenuItem value="">
-                                <em>None</em>
-                            </MenuItem>
                             <MenuItem value={'Odessa'}>Odessa</MenuItem>
                             <MenuItem value={'Charkov'}>Charkov</MenuItem>
                             <MenuItem value={'Kiev'}>Kiev</MenuItem>
